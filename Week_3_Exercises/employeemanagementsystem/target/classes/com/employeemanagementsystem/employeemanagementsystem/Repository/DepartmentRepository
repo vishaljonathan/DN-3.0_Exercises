@@ -1,0 +1,18 @@
+package com.example.employeemanagementsystem.repository;
+
+import com.example.employeemanagementsystem.entity.Department;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface DepartmentRepository extends JpaRepository<Department, Long> {
+
+    // Derived query method to find a department by name
+    Department findByName(String name);
+
+    // Find a department by name ignoring case
+    Department findByNameIgnoreCase(String name);
+
+    // Check if a department exists by name
+    boolean existsByName(String name);
+}
