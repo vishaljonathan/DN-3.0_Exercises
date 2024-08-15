@@ -1,0 +1,76 @@
+package com.example.employeemanagementsystem.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.util.List;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@DynamicUpdate
+@DynamicInsert
+@BatchSize(size=10)
+@Table(name = "employees")
+@EntityListeners(AuditingEntityListener.class)
+@NamedQueries({
+    @NamedQuery(
+        name = "Employee.findByDepartmentNameNamed",
+        query = "SELECT e FROM Employee e WHERE e.department.name = :departmentName"
+    ),
+    @NamedQuery(
+        name = "Employee.findByEmailDomainNamed",
+        query = "SELECT e FROM Employee e WHERE e.email LIKE %:emailDomain%"
+    )
+})
+public class Employee {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @Column(name = "email", nullable = false, unique = true)
+    private String email;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id", nullable = false)
+    private Department department;
+
+    @CreatedBy
+    @Column(updatable = false)
+    private String createdBy;
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdDate;
+
+    @LastModifiedBy
+    private String lastModifiedBy;
+
+    @LastModifiedDate
+    private LocalDateTime lastModifiedDate;
+
+    public void batchInsertEmployees(List<Employee> employees) {
+        for (int i = 0; i < employees.size(); i++) {
+            entityManager.persist(employees.get(i));
+    
+            if (i % 20 == 0) { // Flush a batch of inserts and release memory
+                entityManager.flush();
+                entityManager.clear();
+            }
+        }
+    }
+    
+}
